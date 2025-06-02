@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Definición de IA Ética</title>
+</head>
+<body>
+  <h1>Solicitar definición de IA ética</h1>
+  <form id="iaetica-form">
+    <label for="definicion">Definición:</label><br />
+    <textarea id="definicion" name="definicion" required rows="3" cols="50"></textarea><br />
+    <label for="autor">Autor:</label><br />
+    <input type="text" id="autor" name="autor" required /><br /><br />
+    <button type="submit">Enviar definición</button>
+  </form>
+
+  <div id="mensaje" style="margin-top: 20px; font-weight: bold;"></div>
+
+  <button id="descargar" style="margin-top: 30px;">Descargar CSV</button>
+
+  <script>
+    let definiciones = [];
+
+    function pad(num, size) {
+      let s = "0000" + num;
+      return s.substr(s.length - size);
+    }
+
+    function escapeCSV(str) {
+      if (str.includes('"') || str.includes(',') || str.includes('\n')) {
+        return '"' + str.replace(/"/g, '""') + '"';
+      }
+      return str;
+    }
+
+    document.getElementById('iaetica-form').addEventListener('submit', function(e) {
+      e.preventDefault();
+      const definicion = document.getElementById('definicion').value.trim();
+      const autor = document.getElementById('autor').value.trim();
+
+      if (!definicion || !autor) {
+        document.getElementById('mensaje').innerText = 'Por favor, completa todos los campos.';
+        return;
+      }
+
+      const secuencia = "NEW-" + pad(definiciones.length + 1, 4);
+      const fecha = new Date().toISOString().replace('T', ' ').substring(0, 19);
+
+      definiciones.push({secuencia, definicion, autor, fecha});
+
+      document.getElementById('mensaje').innerText = `Definición guardada con código ${secuencia}.`;
+      document.getElementById('iaetica-form').reset();
+    });
+
+    document.getElementById('descargar').addEventListener('click', function() {
+      if (definiciones.length === 0) {
+        alert("No hay definiciones para descargar.");
+        return;
+      }
+      let csv = definiciones.map(d =>
+        [d.secuencia, escapeCSV(d.definicion), escapeCSV(d.autor), d.fecha].join(',')
+      ).join('\n');
+      const blob = new Blob([csv], {type: 'text/csv'});
+      const url = URL.createObjectURL(blob);
+
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'definiciones.csv';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    });
+  </script>
+</body>
+</html>
